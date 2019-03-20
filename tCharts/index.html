@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="styles.css"></head>
 </head>
 <body>
-Telegram Charts
+<div style="text-align:center">
+<h1>
+    Welcome to Telegram Charts
+</h1>
+    <canvas id="chartCanvas"
+            (mousemove)="bigChartOnMouseMove($event)"
+            (mouseleave)="bigChartOnMouseLeave($event)"></canvas>
+</div>
+
+<script type="text/javascript" src="tc.js"></script>
 </body>
 </html>
