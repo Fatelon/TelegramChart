@@ -1,5 +1,39 @@
 canvas {
     /*border: 1px solid #DFE6EB;*/
     /*border-radius: 10px;*/
-    margin: 2em;
+    /*margin: 2em;*/
+}
+
+#cc {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.bp {
+    margin: .5em auto 2em auto;
+    display: flex;
+}
+
+.bp label {
+    border-radius: 25px;
+    margin: 10px 20px 10px 0;
+    padding-right: 10px;
+    border: 1px solid #96A2AA;
+}
+
+.bp input {
+    margin: 10px;
+}
+
+#prompt {
+    position: absolute;
+    left: 400px;
+    top: 300px;
+    border: 1px solid #DFE6EB;
+    border-radius: 5px;
+    padding: 10px;
+    background: white;
+    /*display: none;*/
+    opacity: 0;
 }
