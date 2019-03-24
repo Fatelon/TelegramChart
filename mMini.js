@@ -560,7 +560,7 @@ class TC {
         const bottomIndent = this.smCB.b + 5;
         const yBorderPair = U.getYBorderPair(this.yAD, this.yIds, this.yIdsKeys);
         let yScale = U.getScale(yBorderPair, new Pa(bottomIndent, this.smCB.t - 5));
-        if (this.yCurScale !== yScale || this.yPredScale === 0) this.yPredScale = this.yCurScale;
+        if (this.yCurScale !== yScale || this.yPredScale === 0 || this.anFc.y === 1) this.yPredScale = this.yCurScale;
         this.yCurScale = yScale;
         const scaleX = U.getScale(new Pa(this.xD[0], this.xD[this.xD.length - 1]), this.smCB);
         const scaledXData = this.xD.map(d => (d - this.xD[0]) * scaleX + this.smCB.l);

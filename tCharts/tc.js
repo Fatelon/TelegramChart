@@ -236,7 +236,7 @@ class TelegramChart {
     }
 
     addBoard() {
-        this.prompt = document.getElementById('prompt');
+        this.prompt = document.getElementById('pr');
         this.pDate = document.getElementById('date');
         this.pBody = document.getElementById('body');
         const cc = document.getElementById('cc');
@@ -568,7 +568,8 @@ class TelegramChart {
         const bottomIndent = this.smallChartBoundaries.bottom + 5;
         const yBorderPair = Utils.getYBorderPair(this.yAllData, this.yIds, this.yIdsKeys);
         let yScale = Utils.getScale(yBorderPair, new Pair(bottomIndent, this.smallChartBoundaries.top - 5));
-        if (this.yCurScale !== yScale || this.yPredScale === 0) this.yPredScale = this.yCurScale;
+        if (this.yCurScale !== yScale || this.yPredScale === 0 || this.animationFactor.y === 1) this.yPredScale = this.yCurScale;
+        // if (this.yCurScale !== yScale || this.yPredScale === 0) this.yPredScale = this.yCurScale;
         this.yCurScale = yScale;
         const scaleX = Utils.getScale(new Pair(this.xData[0], this.xData[this.xData.length - 1]), this.smallChartBoundaries);
         const scaledXData = this.xData.map(d => (d - this.xData[0]) * scaleX + this.smallChartBoundaries.left);
