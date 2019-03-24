@@ -62,7 +62,7 @@ class Utils {
         return yBorderPair;
     }
 
-    static drawChartLine(canvasContext, xCanvasData, yCanvasdData, lineColor, lineWidth, lineAlpha, vLineIndex) {
+    static drawChartLine(canvasContext, xCanvasData, yCanvasdData, backgroundColor, lineColor, lineWidth, lineAlpha, vLineIndex) {
         if (lineAlpha === 0) return;
         canvasContext.lineWidth = lineWidth;
         canvasContext.lineCap = 'round';
@@ -77,20 +77,28 @@ class Utils {
         canvasContext.stroke();
         if (vLineIndex !== null) {
             canvasContext.beginPath();
-            canvasContext.fillStyle = '#FFFFFF';
+            canvasContext.fillStyle = backgroundColor;
             canvasContext.arc(xCanvasData[vLineIndex], yCanvasdData[vLineIndex], 5, 0, 2 * Math.PI);
             canvasContext.fill();
             canvasContext.arc(xCanvasData[vLineIndex], yCanvasdData[vLineIndex], 5, 0, 2 * Math.PI);
+            canvasContext.fill();
             canvasContext.stroke();
         }
         canvasContext.globalAlpha = 1;
     }
 
-    static formatDate(date) {
-        const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const day = date.getDate();
-        const monthIndex = date.getMonth();
-        return monthsShort[monthIndex] + ' ' + day;
+    static ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    static ws = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    static formatDate(date, type) {
+        const d = date.getDate();
+        const m = date.getMonth();
+        let str = this.ms[m] + ' ' + d;
+        if (type === 1) {
+            const wd = date.getDay();
+            str = this.ws[wd] + ', ' + str;
+        }
+        return str;
     }
 
     static getScale(dataBoundaries, canvasBoundaries) {
@@ -135,15 +143,12 @@ class TelegramChart {
         this.canvasContext = null;
         this.canvas = null;
 
-        // this.width = 1000;
         this.width = Math.max(window.innerWidth * 2 / 3, 300);
-        // this.height = 500;
-        this.height = Math.max(window.innerHeight * 2 / 3, 200);
+        this.height = Math.max(window.innerHeight * 3 / 5, 200);
 
         this.xData = [];
         this.yAllData = [];
         this.limitedData = new Point([], []);
-        this.linesColors = [];
         this.yIds = {};
         this.yIdsKeys = [];
         this.lablesNumber = new Point(7, 7);
@@ -155,35 +160,25 @@ class TelegramChart {
         this.currentAnimation = new Point(null, null);
         this.promptAnimation = null;
         this.xPredStep = 0;
+        this.yCurScale = 0;
         this.yPredScale = 0;
-        // this.
 
         this.frameDragType = '';
         this.changeFrameAllowed = false;
         this.minFrameWidth = this.width / 100;
-        // this.minFrameWidth = 0;
         this.predMousePoint = new Point(0, 0);
 
         this.canvasMargin = new Boundaries(30, 0, 0, 0);
 
         this.fBorderWidth = new Point(this.width / 100, this.height / 250);
 
-        this.setColors(false);
+        this.chartTitle = chartTitle;
 
         this.prepareData(data);
 
-        this.initCanvas(chartTitle);
+        this.initCanvas();
 
-        // this.prepareData(data);
-
-        this.refreshView(true);
-    }
-    setColors(m) {
-        this.labelsTextFont1 = 'lighter 9pt Helvetica';
-        this.labelsTextFont2 = 'lighter 18pt Helvetica';
-        this.labelsTextColor = m ? '#96A2AA' : '#96A2AA';
-        this._frameColor = m ? 'rgba(221, 234, 243, 0.7)' : 'rgba(221, 234, 243, 0.7)';
-        this._outFrameColor = m ? 'rgba(245, 249, 251, 0.7)' : 'rgba(245, 249, 251, 0.7)';
+        this.setMode(true);
     }
 
     prepareData(chartData) {
@@ -193,23 +188,20 @@ class TelegramChart {
             if (chartData.types[columnKey] === 'x') {
                 this.xData = columnData;
             } else if (chartData.types[columnKey] === 'line') {
-                // this.yIds[columnKey] = true;
                 this.yIdsKeys.push(columnKey);
                 this.yIds[columnKey] = {
                     inUse: true,
-                    alpha: 0
+                    alpha: 0,
+                    name: chartData.names[columnKey],
+                    color: chartData.colors[columnKey]
                 };
                 this.yAllData.push(columnData);
-                this.linesColors.push(chartData.colors[columnKey]);
-                this.names = chartData.names;
             }
         });
     }
 
-    initCanvas(chartTitle) {
-        // this.canvas = document.createElement('canvas');
-        // const cc = document.getElementById('cc').appendChild(this.canvas);
-        this.addBoard(chartTitle);
+    initCanvas() {
+        this.addBoard();
         this.canvas.onmouseup = this.onMouseUp.bind(this);
         this.canvas.onmousedown = this.onMouseDown.bind(this);
         this.canvas.onmousemove = this.onMouseMove.bind(this);
@@ -244,33 +236,69 @@ class TelegramChart {
         );
     }
 
-    addBoard(chartTitle) {
+    addBoard() {
         this.prompt = document.getElementById('prompt');
+        this.pDate = document.getElementById('date');
+        this.pBody = document.getElementById('body');
         const cc = document.getElementById('cc');
         const cBox = document.createElement('div');
         this.canvas = document.createElement('canvas');
-        const bp = document.createElement('div');
-        bp.className = 'bp';
+        this.bc = document.createElement('div');
+        this.bc.className = 'bp';
         cBox.style.width = this.width + 'px';
         this.yIdsKeys.forEach(yId => {
             const l = document.createElement('label');
             const i = document.createElement('input');
             i.type = 'checkbox';
+            // i.checked.style.backgroundColor = this.yIds[yId].color;
+            i.style.backgroundColor = this.yIds[yId].color;
+            i.style.borderColor = this.yIds[yId].color;
             i.setAttribute('checked', 'true');
             l.appendChild(i);
-            l.innerHTML += this.names[yId];
-            bp.appendChild(l);
-            l.onchange = this.clickOnButton.bind(this, yId);
-            l.onselectstart = () => {return false;};
+            l.innerHTML += this.yIds[yId].name;
+            this.bc.appendChild(l);
+            l.onchange = this.clickOnButton.bind(this, l, yId);
+            l.onselectstart = () => false;
         });
         const p = document.createElement('h4');
-        p.innerHTML = chartTitle;
-        p.onselectstart = () => {return false;};
+        p.id = this.chartTitle;
+        p.innerHTML = this.chartTitle;
+        p.onselectstart = () => {
+            return false;
+        };
         p.style.textAlign = 'left';
         cBox.appendChild(p);
         cBox.appendChild(this.canvas);
-        cBox.appendChild(bp);
+        cBox.appendChild(this.bc);
         cc.appendChild(cBox);
+    }
+
+    setMode(m) {
+        this.labelsTextFont1 = 'lighter 9pt Helvetica';
+        this.labelsTextFont2 = 'lighter 18pt Helvetica';
+        this.labelsTextColor = m ? '#96A2AA' : '#96A2AA';
+        this._frameColor = m ? '#DDEAF3' : '#40566B';
+        this._outFrameColor = m ? '#F5F9FB' : '#1F2A38';
+        this.backgroundColor = m ? '#FFFFFF' : '#242F3E';
+        this.textColor = m ? '#000000' : '#FFFFFF';
+        this.axesTextColor = m ? '#96A2AA' : '#546778';
+        this.horizontalLinesColor = m ? '#ECF0F3' : '#313D4D';
+        this.verticalLinesColor = m ? '#DFE6EB' : '#3B4A5A';
+        document.body.style.backgroundColor = this.backgroundColor;
+        this.prompt.style.background = m ? '#FFFFFF' : '#253241';
+        this.prompt.style.borderColor = m ? '#DFE6EB' : '#202a37';
+        this.prompt.style.boxShadow = m ? '2px 2px 1px #DFE6EB' : '2px 2px 1px #202a37';
+        this.pDate.style.color = this.textColor;
+
+        document.getElementById(this.chartTitle).style.color = this.textColor;
+
+        this.bc.childNodes.forEach(l => {
+            l.style.color = this.textColor;
+            l.style.borderColor = this.verticalLinesColor;
+            l.childNodes[0].style.color = this.backgroundColor;
+        });
+
+        this.refreshView(true);
     }
 
     refreshView(recalculate, forceAnim) {
@@ -278,14 +306,12 @@ class TelegramChart {
             this.calculateDataAndBoundaries(forceAnim);
         }
         this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // this.canvasContext.transform(1, 0, 0, -1, 0, this.canvas.height);
         this.drawBigChart();
         this.canvasContext.clearRect(0, 0, this.smallChartBoundaries.right, this.smallChartBoundaries.top);
         this.drawSmallChart();
-        // this.canvasContext.transform(1, 0, 0, -1, 0, this.canvas.height);
     }
 
-    calculateDataAndBoundaries(forceAnim) {
+    calculateDataAndBoundaries(yForceAnim) {
         const frameBorderRate = new Pair(
             this.frameBoundaries.left / this.smallChartWidth,
             this.frameBoundaries.right / this.smallChartWidth
@@ -303,7 +329,6 @@ class TelegramChart {
             }
         });
         const first = this.xPredStep === 0;
-        // const first = false;
         while (Math.ceil((right - left + 1) / this.axeBoundInterval.x.step) > 9) {
             this.xPredStep = this.axeBoundInterval.x.step;
             this.axeBoundInterval.x.step *= 2;
@@ -318,12 +343,11 @@ class TelegramChart {
         right = Math.min(right + 1, this.xData.length - 1) + 1;
         this.limitedData.x = this.xData.slice(left, right);
         this.limitedData.y = this.yAllData.map(yData => yData.slice(left, right));
-        // if (this.limitedData.y.length === 0) NO AVAILABLE DATA!!!
         this.currentScale.x = Utils.getScale(this.axeBoundInterval.x, this.bigChartBoundaries.getPair(true));
         const yBorderPair = Utils.getYBorderPair(this.limitedData.y, this.yIds, this.yIdsKeys);
         let yNewInterval = Utils.getInterval(yBorderPair, this.lablesNumber.y);
         if (yBorderPair.right < yBorderPair.left) yNewInterval = new Interval(10, 10, 1);
-        if (!forceAnim && yNewInterval.isEqual(this.yNewInterval)) return;
+        if (!yForceAnim && yNewInterval.isEqual(this.yNewInterval)) return;
         if (this.currentAnimation.y !== null) {
             clearTimeout(this.currentAnimation.y);
             this.yPredInterval = this.yNewInterval;
@@ -389,14 +413,16 @@ class TelegramChart {
             this.drawHorizontalLines(this.yPredInterval, 1 - this.animationFactor.y);
         }
         this.drawHorizontalLines(this.yNewInterval, this.animationFactor.y);
-        const scaledXData = this.limitedData.x.map(d => (d - this.axeBoundInterval.x.left) * this.currentScale.x + this.bigChartBoundaries.left);
+        const scaledXData = this.limitedData.x.map(d =>
+            (d - this.axeBoundInterval.x.left) * this.currentScale.x + this.bigChartBoundaries.left);
         const vLineIndex = this.drawVerticalLine(scaledXData);
         this.limitedData.y.forEach((yData, index) => {
             Utils.drawChartLine(
                 this.canvasContext,
                 scaledXData,
                 yData.map(d => (d - this.axeBoundInterval.y.left) * this.currentScale.y + this.bigChartBoundaries.bottom),
-                this.linesColors[index],
+                this.backgroundColor,
+                this.yIds[this.yIdsKeys[index]].color,
                 3,
                 this.yIds[this.yIdsKeys[index]].alpha,
                 vLineIndex
@@ -417,13 +443,15 @@ class TelegramChart {
         this.canvasContext.font = this.labelsTextFont2;
         this.canvasContext.fillText('No data available', this.canvas.width / 2 - this.canvas.width / 10, this.canvas.height / 2);
         this.canvasContext.transform(1, 0, 0, -1, 0, height);
+        this.canvasContext.fill();
         this.canvasContext.stroke();
         this.canvasContext.globalAlpha = 1;
     }
 
     drawHorizontalLines(interval, rate) {
         this.canvasContext.beginPath();
-        this.canvasContext.strokeStyle = 'rgba(223, 230, 235, ' + rate + ')';
+        this.canvasContext.strokeStyle = this.horizontalLinesColor;
+        this.canvasContext.globalAlpha = rate;
         this.canvasContext.lineWidth = 1;
         let currentY = 0;
         while (currentY <= interval.right - interval.left && interval.step > 0) {
@@ -433,10 +461,10 @@ class TelegramChart {
             currentY += interval.step;
         }
         this.canvasContext.stroke();
+        this.canvasContext.globalAlpha = 1;
     }
 
     drawVerticalLine(scaledXData) {
-        // console.log('this.predMousePoint', this.predMousePoint, Utils.isPointInFrame(this.predMousePoint, this.bigChartBoundaries));
         if (!this.changeFrameAllowed && Utils.isPointInFrame(this.predMousePoint, this.bigChartBoundaries)) {
             let i = 0;
             while ((Math.abs(scaledXData[i + 1] - this.predMousePoint.x) < Math.abs(scaledXData[i] - this.predMousePoint.x)
@@ -444,31 +472,43 @@ class TelegramChart {
                 i++;
             }
             this.canvasContext.beginPath();
-            // this.canvasContext.strokeStyle = this._myColor;
-            this.canvasContext.strokeStyle = '#B6C2CA';
+            this.canvasContext.strokeStyle = this.verticalLinesColor;
             this.canvasContext.lineWidth = 1;
             this.canvasContext.moveTo(scaledXData[i], this.bigChartBoundaries.top);
             this.canvasContext.lineTo(scaledXData[i], this.bigChartBoundaries.bottom);
             this.canvasContext.stroke();
-
-
-            const newPromptLeft = Math.round(this.canvas.offsetLeft + scaledXData[i] - 30) + 'px';
-            if (newPromptLeft != this.prompt.style.left || this.prompt.style.opacity <= 0) {
+            const f = (scaledXData[i] - this.bigChartBoundaries.left) / (this.bigChartBoundaries.right - this.bigChartBoundaries.left);
+            const newPromptLeft = Math.round(this.canvas.offsetLeft + scaledXData[i] - this.prompt.offsetWidth * f) + 'px';
+            if (newPromptLeft !== this.prompt.style.left || this.prompt.style.opacity <= 0) {
                 clearTimeout(this.promptAnimation);
-                this.runPromptAnimation(0, 0.05);
-                // console.log('GO!', newPromptLeft, this.prompt.style.left);
+                this.setPrompt(i);
+                this.runPromptAnimation(0, 0.06);
             }
             this.prompt.style.left = newPromptLeft;
-            this.prompt.style.top = (this.canvas.offsetTop + 30) + 'px';
+            this.prompt.style.top = (this.canvas.offsetTop + this.canvas.height / 20) + 'px';
             return i;
         }
         if (this.prompt.style.opacity > 0) {
             clearTimeout(this.promptAnimation);
             this.prompt.style.opacity = '0';
-            // this.runPromptAnimation(1, -0.1);
         }
 
         return null;
+    }
+
+    setPrompt(i) {
+        this.pDate.innerText = Utils.formatDate(new Date(this.limitedData.x[i]), 1);
+        while (this.pBody.firstChild) {
+            this.pBody.removeChild(this.pBody.firstChild);
+        }
+        this.yIdsKeys.forEach((key, ind) => {
+            if (this.yIds[key].inUse) {
+                const info = document.createElement('div');
+                info.style.color = this.yIds[key].color;
+                info.innerText = this.yIds[key].name + ':  ' + this.limitedData.y[ind][i];
+                this.pBody.appendChild(info);
+            }
+        });
     }
 
     runPromptAnimation(rate, dir) {
@@ -482,62 +522,71 @@ class TelegramChart {
     drawYScaleLabelsText(interval, rate) {
         const height = this.canvas.height;
         this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        this.canvasContext.fillStyle = 'rgba(150, 162, 170, ' + rate + ')';
+        // this.canvasContext.fillStyle = 'rgba(150, 162, 170, ' + rate + ')';
+        this.canvasContext.fillStyle = this.axesTextColor;
+        this.canvasContext.lineWidth = 0.2;
+        this.canvasContext.strokeStyle = this.axesTextColor;
         this.canvasContext.font = this.labelsTextFont1;
         let currentY = 0;
         while (currentY <= interval.right - interval.left && interval.step > 0) {
             const yCoordinate = currentY * this.currentScale.y + this.bigChartBoundaries.bottom;
             this.canvasContext.fillText('' + (interval.left + currentY),
                 this.bigChartBoundaries.left, height - yCoordinate - 0.015 * height);
+            this.canvasContext.strokeText('' + (interval.left + currentY),
+                this.bigChartBoundaries.left, height - yCoordinate - 0.015 * height);
             currentY += interval.step;
         }
+        // this.canvasContext.fill();
+        this.canvasContext.stroke();
         this.canvasContext.transform(1, 0, 0, -1, 0, height);
     }
 
     drawXScaleLabelsText() {
         const height = this.canvas.height;
         this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        this.canvasContext.fillStyle = 'rgba(150, 162, 170, 1)';
+        this.canvasContext.fillStyle = this.axesTextColor;
+        this.canvasContext.strokeStyle = this.axesTextColor;
+        this.canvasContext.lineWidth = 0.2;
         let factor = this.xPredStep < this.axeBoundInterval.x.step ? 1 - this.animationFactor.x : this.animationFactor.x;
-        // console.log('FFF', this.axeBoundInterval.x.step, this.xPredStep, this.animationFactor.x, factor);
         const step = Math.min(this.xPredStep, this.axeBoundInterval.x.step);
         for (let i = 0; i <= this.xData.length; i += step) {
-            // const fac = (i / step) % 2 === 0 ? 1 : factor;
-            this.canvasContext.fillStyle = 'rgba(150, 162, 170, ' + ((i / step) % 2 === 0 ? 1 : factor) + ')';
+            this.canvasContext.globalAlpha = (i / step) % 2 === 0 ? 1 : factor;
             const xValue = this.xData[i];
             const coord = (xValue - this.axeBoundInterval.x.left) * this.currentScale.x + this.bigChartBoundaries.left;
+            this.canvasContext.strokeText(
+                '' + Utils.formatDate(new Date(xValue)), coord,
+                height - this.bigChartBoundaries.bottom + 20
+            );
             this.canvasContext.fillText(
                 '' + Utils.formatDate(new Date(xValue)), coord,
                 height - this.bigChartBoundaries.bottom + 20
             );
         }
+        this.canvasContext.stroke();
+        this.canvasContext.globalAlpha = 1;
         this.canvasContext.transform(1, 0, 0, -1, 0, height);
     }
 
     drawSmallChart() {
-        if (this.yNewInterval.left === this.yNewInterval.right) this.yPredScale = 0;
         const bottomIndent = this.smallChartBoundaries.bottom + 5;
         const yBorderPair = Utils.getYBorderPair(this.yAllData, this.yIds, this.yIdsKeys);
         let yScale = Utils.getScale(yBorderPair, new Pair(bottomIndent, this.smallChartBoundaries.top - 5));
-        if (this.animationFactor.y === 1) {
-            this.yPredScale = yScale;
-        }
+        if (this.yCurScale !== yScale || this.yPredScale === 0) this.yPredScale = this.yCurScale;
+        this.yCurScale = yScale;
         const scaleX = Utils.getScale(new Pair(this.xData[0], this.xData[this.xData.length - 1]), this.smallChartBoundaries);
-        // this.currentScale.x
         const scaledXData = this.xData.map(d => (d - this.xData[0]) * scaleX + this.smallChartBoundaries.left);
 
         if (this.yNewInterval.left !== this.yNewInterval.right) {
             this.yAllData.forEach((yData, index) => {
-                let sc = this.yPredScale + (yScale - this.yPredScale) * this.animationFactor.y;
-                if (!this.yIds[this.yIdsKeys[index]].inUse || this.yIds[this.yIdsKeys[index]].alpha < 1)
+                let sc = yScale;
+                if (!this.yIds[this.yIdsKeys[index]].inUse && this.yIds[this.yIdsKeys[index]].alpha < 1)
                     sc = this.yPredScale;
-                if (this.yIds[this.yIdsKeys[index]].inUse && this.yIds[this.yIdsKeys[index]].alpha < 1)
-                    sc = yScale;
                 Utils.drawChartLine(
                     this.canvasContext,
                     scaledXData,
                     yData.map(d => (d - yBorderPair.left) * sc + bottomIndent),
-                    this.linesColors[index],
+                    this.backgroundColor,
+                    this.yIds[this.yIdsKeys[index]].color,
                     1,
                     this.yIds[this.yIdsKeys[index]].alpha,
                     null
@@ -551,6 +600,7 @@ class TelegramChart {
         const xWidth = this.fBorderWidth.x;
         const yWidth = this.fBorderWidth.y;
         this.canvasContext.strokeStyle = this._frameColor;
+        this.canvasContext.globalAlpha = 0.6;
         this.canvasContext.beginPath();
         this.canvasContext.lineCap = 'butt';
         this.canvasContext.lineWidth = yWidth;
@@ -578,10 +628,12 @@ class TelegramChart {
             this.smallChartBoundaries.right - this.frameBoundaries.right,
             this.frameBoundaries.top - this.smallChartBoundaries.bottom
         );
+        this.canvasContext.globalAlpha = 1;
     }
 
-    clickOnButton(yId) {
+    clickOnButton(l, yId) {
         this.yIds[yId].inUse = !this.yIds[yId].inUse;
+        l.childNodes[0].style.backgroundColor = this.yIds[yId].inUse ? this.yIds[yId].color : this.backgroundColor;
         this.refreshView(true, true);
     }
 
@@ -611,7 +663,12 @@ class TelegramChart {
         const cRect = event.target.getBoundingClientRect();
         const currentMousePoint = new Point(event.clientX - cRect.left, cRect.bottom - event.clientY);
         if (currentMousePoint.x === this.predMousePoint.x) return;
-        // if (!Utils.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) this.changeFrameAllowed = false;
+        if (Utils.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
+            this.canvas.style.cursor = 'col-resize';
+            // this.changeFrameAllowed = false;
+        } else {
+            this.canvas.style.cursor = 'default';
+        }
         if (this.changeFrameAllowed) {
             const xOffset = currentMousePoint.x - this.predMousePoint.x;
             if (this.frameDragType === 'left') {
@@ -635,7 +692,6 @@ class TelegramChart {
             }
         }
         this.predMousePoint = currentMousePoint;
-        // this.refreshView(this.changeFrameAllowed);
         this.refreshView(true);
     }
 
@@ -667,25 +723,53 @@ class TelegramChart {
 
 }
 
+let mode = true;
+let charts = [];
+
+changeMode = () => {
+    mode = !mode;
+    const title = document.getElementById('title');
+    const hb = document.getElementById('hb');
+    const swMode = document.getElementById('swMode');
+
+    if (mode) {
+        title.style.color = '#000000';
+        swMode.innerText = 'To Night Mode';
+        hb.classList.remove('night');
+        hb.classList.add('day');
+    } else {
+        title.style.color = '#FFFFFF';
+        swMode.innerText = 'To Day Mode';
+        hb.classList.remove('day');
+        hb.classList.add('night');
+    }
+    charts.forEach(ch => ch.setMode(mode));
+};
+
 let jsonData = [];
 const xhr = new XMLHttpRequest();
 xhr.open('GET', '/chart_data.json');
 xhr.onreadystatechange = (e) => {
-    if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        charts = [];
         jsonData = JSON.parse(xhr.responseText);
         // jsonData.forEach((data, i) => new TelegramChart(data, 'Chart #' + (i + 1)));
-        jsonData.forEach((data, i) => new TelegramChart(data, 'Followers #' + (i + 1)));
+        jsonData.forEach((data, i) => charts.push(new TelegramChart(data, 'Followers #' + (i + 1))));
         // new TelegramChart(JSON.parse(xhr.responseText)[0], 'Followers #' + 1);
     }
 };
 xhr.send();
 
-// resize = (e) => {
-//     const myNode = document.getElementById('cc');
-//     while (myNode.firstChild) {
-//         myNode.removeChild(myNode.firstChild);
-//     }
-//     jsonData.forEach(data => new TelegramChart(data));
-// };
-//
-// window.addEventListener('resize', resize);
+// let gWidth = window.innerWidth;
+// let gHeight = window.innerHeight;
+
+
+resize = (e) => {
+    const myNode = document.getElementById('cc');
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
+    }
+    jsonData.forEach((data, i) => new TelegramChart(data, 'Followers #' + (i + 1)));
+};
+
+window.addEventListener('resize', resize);
