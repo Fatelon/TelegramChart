@@ -662,7 +662,7 @@ class TelegramChart {
         if (currentMousePoint.x === this.predMousePoint.x) return;
         if (Utils.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
             this.canvas.style.cursor = 'col-resize';
-            // this.changeFrameAllowed = false;
+            // this.chFrAll = false;
         } else {
             this.canvas.style.cursor = 'default';
         }
