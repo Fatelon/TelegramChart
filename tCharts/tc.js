@@ -1,18 +1,18 @@
-class Point {
+class Po {
     constructor(x, y) {
         this.x = x;
         this.y = y;
     }
 }
 
-class Pair {
+class Pa {
     constructor(left, right) {
         this.left = left;
         this.right = right;
     }
 }
 
-class Interval {
+class In {
     constructor(left, right, step) {
         this.left = left;
         this.right = right;
@@ -24,140 +24,133 @@ class Interval {
     }
 }
 
-class Boundaries {
-    constructor(top, right, bottom, left) {
-        this.top = top;
-        this.right = right;
-        this.bottom = bottom;
-        this.left = left;
+class Bo {
+    constructor(t, r, b, l) {
+        this.top = t;
+        this.right = r;
+        this.bottom = b;
+        this.left = l;
     }
 
-    getPair(horizontal) {
-        if (horizontal) {
-            return new Pair(this.left, this.right);
+    getPair(h) {
+        if (h) {
+            return new Pa(this.left, this.right);
         } else {
-            return new Pair(this.bottom, this.top);
+            return new Pa(this.bottom, this.top);
         }
     }
 }
 
-class Utils {
+class U {
 
-    static getMiddleInterval(predInterval, newInterval, rate) {
-        return new Interval(
-            predInterval.left + (newInterval.left - predInterval.left) * rate,
-            predInterval.right + (newInterval.right - predInterval.right) * rate,
-            predInterval.step + (newInterval.step - predInterval.step) * rate
+    static getMiddleInterval(pI, nI, r) {
+        return new In(
+            pI.left + (nI.left - pI.left) * r,
+            pI.right + (nI.right - pI.right) * r,
+            pI.step + (nI.step - pI.step) * r
         );
     }
 
-    static getYBorderPair(yAllData, yIds, yIdsKeys) {
-        const yBorderPair = new Pair(Number.MAX_VALUE, Number.MIN_VALUE);
-        yAllData.forEach((columnData, index) => {
-            if (yIds[yIdsKeys[index]].inUse) {
-                yBorderPair.left = Math.min(Math.min(...columnData), yBorderPair.left);
-                yBorderPair.right = Math.max(Math.max(...columnData), yBorderPair.right);
+    static getYBorderPair(yAD, yIds, yIdsK) {
+        const yBP = new Pa(Number.MAX_VALUE, Number.MIN_VALUE);
+        yAD.forEach((cD, index) => {
+            if (yIds[yIdsK[index]].inUse) {
+                yBP.left = Math.min(Math.min(...cD), yBP.left);
+                yBP.right = Math.max(Math.max(...cD), yBP.right);
             }
         });
-        return yBorderPair;
+        return yBP;
     }
 
-    static drawChartLine(canvasContext, xCanvasData, yCanvasdData, backgroundColor, lineColor, lineWidth, lineAlpha, vLineIndex) {
-        if (lineAlpha === 0) return;
-        canvasContext.lineWidth = lineWidth;
-        canvasContext.lineCap = 'round';
-        canvasContext.strokeStyle = lineColor;
-        canvasContext.beginPath();
-        canvasContext.globalAlpha = lineAlpha;
-        xCanvasData.forEach((dX, index) => {
-            if (yCanvasdData.length > index) {
-                canvasContext.lineTo(dX, yCanvasdData[index]);
+    static drawChartLine(cx, xCD, yCD, bC, lC, lW, lA, vLI) {
+        if (lA === 0) return;
+        cx.lineWidth = lW;
+        cx.lineCap = 'round';
+        cx.strokeStyle = lC;
+        cx.beginPath();
+        cx.globalAlpha = lA;
+        xCD.forEach((dX, index) => {
+            if (yCD.length > index) {
+                cx.lineTo(dX, yCD[index]);
             }
         });
-        canvasContext.stroke();
-        if (vLineIndex !== null) {
-            canvasContext.beginPath();
-            canvasContext.fillStyle = backgroundColor;
-            canvasContext.arc(xCanvasData[vLineIndex], yCanvasdData[vLineIndex], 5, 0, 2 * Math.PI);
-            canvasContext.fill();
-            canvasContext.arc(xCanvasData[vLineIndex], yCanvasdData[vLineIndex], 5, 0, 2 * Math.PI);
-            canvasContext.fill();
-            canvasContext.stroke();
+        cx.stroke();
+        if (vLI !== null) {
+            cx.beginPath();
+            cx.fillStyle = bC;
+            cx.arc(xCD[vLI], yCD[vLI], 5, 0, 2 * Math.PI);
+            cx.fill();
+            cx.arc(xCD[vLI], yCD[vLI], 5, 0, 2 * Math.PI);
+            cx.fill();
+            cx.stroke();
         }
-        canvasContext.globalAlpha = 1;
+        cx.globalAlpha = 1;
     }
 
-    static ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    static ws = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    static formatDate(date, type) {
-        const d = date.getDate();
-        const m = date.getMonth();
-        let str = this.ms[m] + ' ' + d;
-        if (type === 1) {
-            const wd = date.getDay();
-            str = this.ws[wd] + ', ' + str;
+    static formatDate(dt, t) {
+        const ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const ws = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const d = dt.getDate();
+        const m = dt.getMonth();
+        let s = ms[m] + ' ' + d;
+        if (t === 1) {
+            const wd = dt.getDay();
+            s = ws[wd] + ', ' + s;
         }
-        return str;
+        return s;
     }
 
-    static getScale(dataBoundaries, canvasBoundaries) {
-        return Math.abs(canvasBoundaries.right - canvasBoundaries.left) / Math.abs(dataBoundaries.right - dataBoundaries.left);
+    static getScale(dB, cB) {
+        return Math.abs(cB.right - cB.left) / Math.abs(dB.right - dB.left);
     }
 
-    static isPointInFrame(point, frame) {
-        return point.x >= frame.left && point.x <= frame.right && point.y >= frame.bottom && point.y <= frame.top;
+    static isPointInFrame(p, f) {
+        return p.x >= f.left && p.x <= f.right && p.y >= f.bottom && p.y <= f.top;
     }
 
-    static getInterval(chartFrame, stepCount) {
-        // const epsilon = (chartFrame.right - chartFrame.left) / Math.pow(10, 6);
-        // chartFrame.right += epsilon;
-        // chartFrame.left -= epsilon;
-        const range = chartFrame.right - chartFrame.left;
+    static getInterval(cF, sC) {
+        const range = cF.right - cF.left;
 
-        const roughStep = range / (stepCount - 1);
-        const goodNormalizedSteps = [1, 1.5, 2, 2.5, 5, 7.5, 10];
-        // const goodNormalizedSteps = [1, 2, 5, 10];
+        const rS = range / (sC - 1);
+        const gS = [1, 1.5, 2, 2.5, 5, 7.5, 10];
 
-        // Normalize rough step to find the normalized one that fits best
-        const stepPower = Math.pow(10, -Math.floor(Math.log10(Math.abs(roughStep))));
-        const normalizedStep = roughStep * stepPower;
-        const goodNormalizedStep = goodNormalizedSteps.find(n => n >= normalizedStep);
-        const step = Number.parseInt((goodNormalizedStep / stepPower).toFixed());
+        const sP = Math.pow(10, -Math.floor(Math.log10(Math.abs(rS))));
+        const nS = rS * sP;
+        const gNS = gS.find(n => n >= nS);
+        const step = Number.parseInt((gNS / sP).toFixed());
 
-        // Determine the scale limits based on the chosen step.
-        const scaleMax = Math.ceil(chartFrame.right / step) * step;
-        const scaleMin = Math.floor(chartFrame.left / step) * step;
+        const sM = Math.ceil(cF.right / step) * step;
+        const sMi = Math.floor(cF.left / step) * step;
 
-        return new Interval(scaleMin, scaleMax, step);
+        return new In(sMi, sM, step);
     }
 }
 
-class TelegramChart {
+class TC {
 
-    constructor(data, title) {
-        this.init(data, title);
+    constructor(d, t, m) {
+        this.init(d, t, m);
     }
 
-    init(data, chartTitle) {
-        this.canvasContext = null;
+    init(d, t, m) {
+        this.cx = null;
         this.canvas = null;
 
         this.width = Math.max(window.innerWidth * 2 / 3, 300);
         this.height = Math.max(window.innerHeight * 3 / 5, 200);
 
-        this.xData = [];
+        this.xD = [];
         this.yAllData = [];
-        this.limitedData = new Point([], []);
+        this.limitedData = new Po([], []);
         this.yIds = {};
         this.yIdsKeys = [];
-        this.lablesNumber = new Point(7, 7);
-        this.yPredInterval = new Interval(0, 0, 1);
-        this.yNewInterval = new Interval(0, 0, 1);
-        this.axeBoundInterval = new Point(new Interval(0, 0, 1), new Interval(0, 0, 1));
-        this.currentScale = new Point(1, 1);
-        this.animationFactor = new Point(1, 1);
-        this.currentAnimation = new Point(null, null);
+        this.lablesNumber = new Po(7, 7);
+        this.yPredInterval = new In(0, 0, 1);
+        this.yNewInterval = new In(0, 0, 1);
+        this.axeBoundInterval = new Po(new In(0, 0, 1), new In(0, 0, 1));
+        this.currentScale = new Po(1, 1);
+        this.animationFactor = new Po(1, 1);
+        this.currentAnimation = new Po(null, null);
         this.promptAnimation = null;
         this.xPredStep = 0;
         this.yCurScale = 0;
@@ -166,19 +159,19 @@ class TelegramChart {
         this.frameDragType = '';
         this.changeFrameAllowed = false;
         this.minFrameWidth = this.width / 100;
-        this.predMousePoint = new Point(0, 0);
+        this.predMousePoint = new Po(0, 0);
 
-        this.canvasMargin = new Boundaries(30, 0, 0, 0);
+        this.canvasMargin = new Bo(30, 0, 0, 0);
 
-        this.fBorderWidth = new Point(this.width / 100, this.height / 250);
+        this.fBorderWidth = new Po(this.width / 100, this.height / 250);
 
-        this.chartTitle = chartTitle;
+        this.chartTitle = t;
 
-        this.prepareData(data);
+        this.prepareData(d);
 
         this.initCanvas();
 
-        this.setMode(true);
+        this.setMode(m);
     }
 
     prepareData(chartData) {
@@ -186,7 +179,7 @@ class TelegramChart {
             const columnKey = cData.slice(0, 1);
             const columnData = cData.slice(1);
             if (chartData.types[columnKey] === 'x') {
-                this.xData = columnData;
+                this.xD = columnData;
             } else if (chartData.types[columnKey] === 'line') {
                 this.yIdsKeys.push(columnKey);
                 this.yIds[columnKey] = {
@@ -211,24 +204,24 @@ class TelegramChart {
 
         this.canvas.width = this.width;
         this.canvas.height = this.height;
-        this.canvasContext = this.canvas.getContext('2d');
-        this.canvasContext.transform(1, 0, 0, -1, 0, this.canvas.height);
+        this.cx = this.canvas.getContext('2d');
+        this.cx.transform(1, 0, 0, -1, 0, this.canvas.height);
 
         const smallChartHeight = this.canvas.height * 0.15;
-        this.bigChartBoundaries = new Boundaries(
+        this.bigChartBoundaries = new Bo(
             this.canvas.height - this.canvasMargin.top,
             this.canvas.width - this.canvasMargin.right,
             this.canvasMargin.bottom + smallChartHeight + 30,
             this.canvasMargin.left
         );
-        this.smallChartBoundaries = new Boundaries(
+        this.smallChartBoundaries = new Bo(
             smallChartHeight + this.canvasMargin.bottom,
             this.canvas.width - this.canvasMargin.right,
             this.canvasMargin.bottom,
             this.canvasMargin.left
         );
         this.smallChartWidth = this.smallChartBoundaries.right - this.smallChartBoundaries.left;
-        this.frameBoundaries = new Boundaries(
+        this.frameBoundaries = new Bo(
             this.smallChartBoundaries.top,
             this.smallChartBoundaries.left + this.canvas.width * 0.2,
             this.smallChartBoundaries.bottom,
@@ -250,7 +243,6 @@ class TelegramChart {
             const l = document.createElement('label');
             const i = document.createElement('input');
             i.type = 'checkbox';
-            // i.checked.style.backgroundColor = this.yIds[yId].color;
             i.style.backgroundColor = this.yIds[yId].color;
             i.style.borderColor = this.yIds[yId].color;
             i.setAttribute('checked', 'true');
@@ -260,7 +252,7 @@ class TelegramChart {
             l.onchange = this.clickOnButton.bind(this, l, yId);
             l.onselectstart = () => false;
         });
-        const p = document.createElement('h4');
+        const p = document.createElement('h3');
         p.id = this.chartTitle;
         p.innerHTML = this.chartTitle;
         p.onselectstart = () => {
@@ -295,7 +287,6 @@ class TelegramChart {
         this.bc.childNodes.forEach(l => {
             l.style.color = this.textColor;
             l.style.borderColor = this.verticalLinesColor;
-            l.childNodes[0].style.color = this.backgroundColor;
         });
 
         this.refreshView(true);
@@ -305,23 +296,23 @@ class TelegramChart {
         if (recalculate || forceAnim) {
             this.calculateDataAndBoundaries(forceAnim);
         }
-        this.canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.cx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawBigChart();
-        this.canvasContext.clearRect(0, 0, this.smallChartBoundaries.right, this.smallChartBoundaries.top);
+        this.cx.clearRect(0, 0, this.smallChartBoundaries.right, this.smallChartBoundaries.top);
         this.drawSmallChart();
     }
 
     calculateDataAndBoundaries(yForceAnim) {
-        const frameBorderRate = new Pair(
+        const frameBorderRate = new Pa(
             this.frameBoundaries.left / this.smallChartWidth,
             this.frameBoundaries.right / this.smallChartWidth
         );
-        const dataSection = this.xData[this.xData.length - 1] - this.xData[0];
-        this.axeBoundInterval.x.left = dataSection * frameBorderRate.left + this.xData[0];
-        this.axeBoundInterval.x.right = dataSection * frameBorderRate.right + this.xData[0];
+        const dataSection = this.xD[this.xD.length - 1] - this.xD[0];
+        this.axeBoundInterval.x.left = dataSection * frameBorderRate.left + this.xD[0];
+        this.axeBoundInterval.x.right = dataSection * frameBorderRate.right + this.xD[0];
         let left = 0;
         let right = 0;
-        this.xData.forEach((xData, index) => {
+        this.xD.forEach((xData, index) => {
             if (xData < this.axeBoundInterval.x.left) {
                 left = index + 1;
             } else if (xData <= this.axeBoundInterval.x.right) {
@@ -340,13 +331,13 @@ class TelegramChart {
             !first && this.checkAndRunXAnimation();
         }
         left = Math.max(left - 1, 0);
-        right = Math.min(right + 1, this.xData.length - 1) + 1;
-        this.limitedData.x = this.xData.slice(left, right);
+        right = Math.min(right + 1, this.xD.length - 1) + 1;
+        this.limitedData.x = this.xD.slice(left, right);
         this.limitedData.y = this.yAllData.map(yData => yData.slice(left, right));
-        this.currentScale.x = Utils.getScale(this.axeBoundInterval.x, this.bigChartBoundaries.getPair(true));
-        const yBorderPair = Utils.getYBorderPair(this.limitedData.y, this.yIds, this.yIdsKeys);
-        let yNewInterval = Utils.getInterval(yBorderPair, this.lablesNumber.y);
-        if (yBorderPair.right < yBorderPair.left) yNewInterval = new Interval(10, 10, 1);
+        this.currentScale.x = U.getScale(this.axeBoundInterval.x, this.bigChartBoundaries.getPair(true));
+        const yBorderPair = U.getYBorderPair(this.limitedData.y, this.yIds, this.yIdsKeys);
+        let yNewInterval = U.getInterval(yBorderPair, this.lablesNumber.y);
+        if (yBorderPair.right < yBorderPair.left) yNewInterval = new In(10, 10, 1);
         if (!yForceAnim && yNewInterval.isEqual(this.yNewInterval)) return;
         if (this.currentAnimation.y !== null) {
             clearTimeout(this.currentAnimation.y);
@@ -377,10 +368,10 @@ class TelegramChart {
             this.yPredInterval = this.yNewInterval;
             this.axeBoundInterval.y = this.yNewInterval;
         } else {
-            this.axeBoundInterval.y = Utils.getMiddleInterval(this.yPredInterval, this.yNewInterval, rate);
+            this.axeBoundInterval.y = U.getMiddleInterval(this.yPredInterval, this.yNewInterval, rate);
         }
         this.animationFactor.y = rate;
-        this.currentScale.y = Utils.getScale(this.axeBoundInterval.y, this.bigChartBoundaries.getPair(false));
+        this.currentScale.y = U.getScale(this.axeBoundInterval.y, this.bigChartBoundaries.getPair(false));
         this.refreshView(false);
     }
 
@@ -417,8 +408,8 @@ class TelegramChart {
             (d - this.axeBoundInterval.x.left) * this.currentScale.x + this.bigChartBoundaries.left);
         const vLineIndex = this.drawVerticalLine(scaledXData);
         this.limitedData.y.forEach((yData, index) => {
-            Utils.drawChartLine(
-                this.canvasContext,
+            U.drawChartLine(
+                this.cx,
                 scaledXData,
                 yData.map(d => (d - this.axeBoundInterval.y.left) * this.currentScale.y + this.bigChartBoundaries.bottom),
                 this.backgroundColor,
@@ -437,46 +428,46 @@ class TelegramChart {
 
     drawNoDataText() {
         const height = this.canvas.height;
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        this.canvasContext.globalAlpha = this.animationFactor.y;
-        this.canvasContext.fillStyle = this.labelsTextColor;
-        this.canvasContext.font = this.labelsTextFont2;
-        this.canvasContext.fillText('No data available', this.canvas.width / 2 - this.canvas.width / 10, this.canvas.height / 2);
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        this.canvasContext.fill();
-        this.canvasContext.stroke();
-        this.canvasContext.globalAlpha = 1;
+        this.cx.transform(1, 0, 0, -1, 0, height);
+        this.cx.globalAlpha = this.animationFactor.y;
+        this.cx.fillStyle = this.labelsTextColor;
+        this.cx.font = this.labelsTextFont2;
+        this.cx.fillText('No data available', this.canvas.width / 2 - this.canvas.width / 10, this.canvas.height / 2);
+        this.cx.transform(1, 0, 0, -1, 0, height);
+        this.cx.fill();
+        this.cx.stroke();
+        this.cx.globalAlpha = 1;
     }
 
     drawHorizontalLines(interval, rate) {
-        this.canvasContext.beginPath();
-        this.canvasContext.strokeStyle = this.horizontalLinesColor;
-        this.canvasContext.globalAlpha = rate;
-        this.canvasContext.lineWidth = 1;
+        this.cx.beginPath();
+        this.cx.strokeStyle = this.horizontalLinesColor;
+        this.cx.globalAlpha = rate;
+        this.cx.lineWidth = 1;
         let currentY = 0;
         while (currentY <= interval.right - interval.left && interval.step > 0) {
             const yCoordinate = currentY * this.currentScale.y + this.bigChartBoundaries.bottom;
-            this.canvasContext.moveTo(this.bigChartBoundaries.left, yCoordinate);
-            this.canvasContext.lineTo(this.bigChartBoundaries.right, yCoordinate);
+            this.cx.moveTo(this.bigChartBoundaries.left, yCoordinate);
+            this.cx.lineTo(this.bigChartBoundaries.right, yCoordinate);
             currentY += interval.step;
         }
-        this.canvasContext.stroke();
-        this.canvasContext.globalAlpha = 1;
+        this.cx.stroke();
+        this.cx.globalAlpha = 1;
     }
 
     drawVerticalLine(scaledXData) {
-        if (!this.changeFrameAllowed && Utils.isPointInFrame(this.predMousePoint, this.bigChartBoundaries)) {
+        if (!this.changeFrameAllowed && U.isPointInFrame(this.predMousePoint, this.bigChartBoundaries)) {
             let i = 0;
             while ((Math.abs(scaledXData[i + 1] - this.predMousePoint.x) < Math.abs(scaledXData[i] - this.predMousePoint.x)
                 || this.bigChartBoundaries.left > scaledXData[i] && this.bigChartBoundaries.right >= scaledXData[i])) {
                 i++;
             }
-            this.canvasContext.beginPath();
-            this.canvasContext.strokeStyle = this.verticalLinesColor;
-            this.canvasContext.lineWidth = 1;
-            this.canvasContext.moveTo(scaledXData[i], this.bigChartBoundaries.top);
-            this.canvasContext.lineTo(scaledXData[i], this.bigChartBoundaries.bottom);
-            this.canvasContext.stroke();
+            this.cx.beginPath();
+            this.cx.strokeStyle = this.verticalLinesColor;
+            this.cx.lineWidth = 1;
+            this.cx.moveTo(scaledXData[i], this.bigChartBoundaries.top);
+            this.cx.lineTo(scaledXData[i], this.bigChartBoundaries.bottom);
+            this.cx.stroke();
             const f = (scaledXData[i] - this.bigChartBoundaries.left) / (this.bigChartBoundaries.right - this.bigChartBoundaries.left);
             const newPromptLeft = Math.round(this.canvas.offsetLeft + scaledXData[i] - this.prompt.offsetWidth * f) + 'px';
             if (newPromptLeft !== this.prompt.style.left || this.prompt.style.opacity <= 0) {
@@ -497,7 +488,7 @@ class TelegramChart {
     }
 
     setPrompt(i) {
-        this.pDate.innerText = Utils.formatDate(new Date(this.limitedData.x[i]), 1);
+        this.pDate.innerText = U.formatDate(new Date(this.limitedData.x[i]), 1);
         while (this.pBody.firstChild) {
             this.pBody.removeChild(this.pBody.firstChild);
         }
@@ -521,68 +512,66 @@ class TelegramChart {
 
     drawYScaleLabelsText(interval, rate) {
         const height = this.canvas.height;
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        // this.canvasContext.fillStyle = 'rgba(150, 162, 170, ' + rate + ')';
-        this.canvasContext.fillStyle = this.axesTextColor;
-        this.canvasContext.lineWidth = 0.2;
-        this.canvasContext.strokeStyle = this.axesTextColor;
-        this.canvasContext.font = this.labelsTextFont1;
+        this.cx.transform(1, 0, 0, -1, 0, height);
+        this.cx.fillStyle = this.axesTextColor;
+        this.cx.lineWidth = 0.2;
+        this.cx.strokeStyle = this.axesTextColor;
+        this.cx.font = this.labelsTextFont1;
         let currentY = 0;
         while (currentY <= interval.right - interval.left && interval.step > 0) {
             const yCoordinate = currentY * this.currentScale.y + this.bigChartBoundaries.bottom;
-            this.canvasContext.fillText('' + (interval.left + currentY),
+            this.cx.fillText('' + (interval.left + currentY),
                 this.bigChartBoundaries.left, height - yCoordinate - 0.015 * height);
-            this.canvasContext.strokeText('' + (interval.left + currentY),
+            this.cx.strokeText('' + (interval.left + currentY),
                 this.bigChartBoundaries.left, height - yCoordinate - 0.015 * height);
             currentY += interval.step;
         }
-        // this.canvasContext.fill();
-        this.canvasContext.stroke();
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
+        this.cx.stroke();
+        this.cx.transform(1, 0, 0, -1, 0, height);
     }
 
     drawXScaleLabelsText() {
         const height = this.canvas.height;
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
-        this.canvasContext.fillStyle = this.axesTextColor;
-        this.canvasContext.strokeStyle = this.axesTextColor;
-        this.canvasContext.lineWidth = 0.2;
+        this.cx.transform(1, 0, 0, -1, 0, height);
+        this.cx.fillStyle = this.axesTextColor;
+        this.cx.strokeStyle = this.axesTextColor;
+        this.cx.lineWidth = 0.2;
         let factor = this.xPredStep < this.axeBoundInterval.x.step ? 1 - this.animationFactor.x : this.animationFactor.x;
         const step = Math.min(this.xPredStep, this.axeBoundInterval.x.step);
-        for (let i = 0; i <= this.xData.length; i += step) {
-            this.canvasContext.globalAlpha = (i / step) % 2 === 0 ? 1 : factor;
-            const xValue = this.xData[i];
+        for (let i = 0; i <= this.xD.length; i += step) {
+            this.cx.globalAlpha = (i / step) % 2 === 0 ? 1 : factor;
+            const xValue = this.xD[i];
             const coord = (xValue - this.axeBoundInterval.x.left) * this.currentScale.x + this.bigChartBoundaries.left;
-            this.canvasContext.strokeText(
-                '' + Utils.formatDate(new Date(xValue)), coord,
+            this.cx.strokeText(
+                '' + U.formatDate(new Date(xValue)), coord,
                 height - this.bigChartBoundaries.bottom + 20
             );
-            this.canvasContext.fillText(
-                '' + Utils.formatDate(new Date(xValue)), coord,
+            this.cx.fillText(
+                '' + U.formatDate(new Date(xValue)), coord,
                 height - this.bigChartBoundaries.bottom + 20
             );
         }
-        this.canvasContext.stroke();
-        this.canvasContext.globalAlpha = 1;
-        this.canvasContext.transform(1, 0, 0, -1, 0, height);
+        this.cx.stroke();
+        this.cx.globalAlpha = 1;
+        this.cx.transform(1, 0, 0, -1, 0, height);
     }
 
     drawSmallChart() {
         const bottomIndent = this.smallChartBoundaries.bottom + 5;
-        const yBorderPair = Utils.getYBorderPair(this.yAllData, this.yIds, this.yIdsKeys);
-        let yScale = Utils.getScale(yBorderPair, new Pair(bottomIndent, this.smallChartBoundaries.top - 5));
+        const yBorderPair = U.getYBorderPair(this.yAllData, this.yIds, this.yIdsKeys);
+        let yScale = U.getScale(yBorderPair, new Pa(bottomIndent, this.smallChartBoundaries.top - 5));
         if (this.yCurScale !== yScale || this.yPredScale === 0) this.yPredScale = this.yCurScale;
         this.yCurScale = yScale;
-        const scaleX = Utils.getScale(new Pair(this.xData[0], this.xData[this.xData.length - 1]), this.smallChartBoundaries);
-        const scaledXData = this.xData.map(d => (d - this.xData[0]) * scaleX + this.smallChartBoundaries.left);
+        const scaleX = U.getScale(new Pa(this.xD[0], this.xD[this.xD.length - 1]), this.smallChartBoundaries);
+        const scaledXData = this.xD.map(d => (d - this.xD[0]) * scaleX + this.smallChartBoundaries.left);
 
         if (this.yNewInterval.left !== this.yNewInterval.right) {
             this.yAllData.forEach((yData, index) => {
                 let sc = yScale;
                 if (!this.yIds[this.yIdsKeys[index]].inUse && this.yIds[this.yIdsKeys[index]].alpha < 1)
                     sc = this.yPredScale;
-                Utils.drawChartLine(
-                    this.canvasContext,
+                U.drawChartLine(
+                    this.cx,
                     scaledXData,
                     yData.map(d => (d - yBorderPair.left) * sc + bottomIndent),
                     this.backgroundColor,
@@ -599,36 +588,36 @@ class TelegramChart {
     drawFrame() {
         const xWidth = this.fBorderWidth.x;
         const yWidth = this.fBorderWidth.y;
-        this.canvasContext.strokeStyle = this._frameColor;
-        this.canvasContext.globalAlpha = 0.6;
-        this.canvasContext.beginPath();
-        this.canvasContext.lineCap = 'butt';
-        this.canvasContext.lineWidth = yWidth;
-        this.canvasContext.moveTo(this.frameBoundaries.left, this.frameBoundaries.top - yWidth / 2);
-        this.canvasContext.lineTo(this.frameBoundaries.right, this.frameBoundaries.top - yWidth / 2);
-        this.canvasContext.moveTo(this.frameBoundaries.right, this.frameBoundaries.bottom + yWidth / 2);
-        this.canvasContext.lineTo(this.frameBoundaries.left, this.frameBoundaries.bottom + yWidth / 2);
-        this.canvasContext.stroke();
-        this.canvasContext.beginPath();
-        this.canvasContext.lineWidth = xWidth;
-        this.canvasContext.moveTo(this.frameBoundaries.left + xWidth / 2, this.frameBoundaries.bottom + yWidth);
-        this.canvasContext.lineTo(this.frameBoundaries.left + xWidth / 2, this.frameBoundaries.top - yWidth);
-        this.canvasContext.moveTo(this.frameBoundaries.right - xWidth / 2, this.frameBoundaries.top - yWidth);
-        this.canvasContext.lineTo(this.frameBoundaries.right - xWidth / 2, this.frameBoundaries.bottom + yWidth);
-        this.canvasContext.stroke();
-        this.canvasContext.fillStyle = this._outFrameColor;
-        this.canvasContext.fillRect(
+        this.cx.strokeStyle = this._frameColor;
+        this.cx.globalAlpha = 0.6;
+        this.cx.beginPath();
+        this.cx.lineCap = 'butt';
+        this.cx.lineWidth = yWidth;
+        this.cx.moveTo(this.frameBoundaries.left, this.frameBoundaries.top - yWidth / 2);
+        this.cx.lineTo(this.frameBoundaries.right, this.frameBoundaries.top - yWidth / 2);
+        this.cx.moveTo(this.frameBoundaries.right, this.frameBoundaries.bottom + yWidth / 2);
+        this.cx.lineTo(this.frameBoundaries.left, this.frameBoundaries.bottom + yWidth / 2);
+        this.cx.stroke();
+        this.cx.beginPath();
+        this.cx.lineWidth = xWidth;
+        this.cx.moveTo(this.frameBoundaries.left + xWidth / 2, this.frameBoundaries.bottom + yWidth);
+        this.cx.lineTo(this.frameBoundaries.left + xWidth / 2, this.frameBoundaries.top - yWidth);
+        this.cx.moveTo(this.frameBoundaries.right - xWidth / 2, this.frameBoundaries.top - yWidth);
+        this.cx.lineTo(this.frameBoundaries.right - xWidth / 2, this.frameBoundaries.bottom + yWidth);
+        this.cx.stroke();
+        this.cx.fillStyle = this._outFrameColor;
+        this.cx.fillRect(
             this.smallChartBoundaries.left,
             this.smallChartBoundaries.bottom,
             this.frameBoundaries.left - this.smallChartBoundaries.left,
             this.frameBoundaries.top - this.smallChartBoundaries.bottom);
-        this.canvasContext.fillRect(
+        this.cx.fillRect(
             this.frameBoundaries.right,
             this.frameBoundaries.bottom,
             this.smallChartBoundaries.right - this.frameBoundaries.right,
             this.frameBoundaries.top - this.smallChartBoundaries.bottom
         );
-        this.canvasContext.globalAlpha = 1;
+        this.cx.globalAlpha = 1;
     }
 
     clickOnButton(l, yId) {
@@ -643,8 +632,8 @@ class TelegramChart {
 
     onMouseDown(event) {
         const cRect = event.target.getBoundingClientRect();
-        const currentMousePoint = new Point(event.clientX - cRect.left, cRect.bottom - event.clientY);
-        if (!Utils.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
+        const currentMousePoint = new Po(event.clientX - cRect.left, cRect.bottom - event.clientY);
+        if (!U.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
             this.changeFrameAllowed = false;
             return;
         }
@@ -661,9 +650,9 @@ class TelegramChart {
 
     onMouseMove(event) {
         const cRect = event.target.getBoundingClientRect();
-        const currentMousePoint = new Point(event.clientX - cRect.left, cRect.bottom - event.clientY);
+        const currentMousePoint = new Po(event.clientX - cRect.left, cRect.bottom - event.clientY);
         if (currentMousePoint.x === this.predMousePoint.x) return;
-        if (Utils.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
+        if (U.isPointInFrame(currentMousePoint, this.smallChartBoundaries)) {
             this.canvas.style.cursor = 'col-resize';
             // this.changeFrameAllowed = false;
         } else {
@@ -697,7 +686,7 @@ class TelegramChart {
 
     onMouseLeave(event) {
         const cRect = event.target.getBoundingClientRect();
-        this.predMousePoint = new Point(event.clientX - cRect.left, cRect.bottom - event.clientY);
+        this.predMousePoint = new Po(event.clientX - cRect.left, cRect.bottom - event.clientY);
         this.changeFrameAllowed = false;
         this.refreshView(true);
     }
@@ -753,23 +742,18 @@ xhr.onreadystatechange = (e) => {
     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
         charts = [];
         jsonData = JSON.parse(xhr.responseText);
-        // jsonData.forEach((data, i) => new TelegramChart(data, 'Chart #' + (i + 1)));
-        jsonData.forEach((data, i) => charts.push(new TelegramChart(data, 'Followers #' + (i + 1))));
-        // new TelegramChart(JSON.parse(xhr.responseText)[0], 'Followers #' + 1);
+        jsonData.forEach((data, i) => charts.push(new TC(data, 'Followers #' + (i + 1), mode)));
     }
 };
 xhr.send();
-
-// let gWidth = window.innerWidth;
-// let gHeight = window.innerHeight;
-
 
 resize = (e) => {
     const myNode = document.getElementById('cc');
     while (myNode.firstChild) {
         myNode.removeChild(myNode.firstChild);
     }
-    jsonData.forEach((data, i) => new TelegramChart(data, 'Followers #' + (i + 1)));
+    charts = [];
+    jsonData.forEach((data, i) => charts.push(new TC(data, 'Followers #' + (i + 1), mode)));
 };
 
 window.addEventListener('resize', resize);
