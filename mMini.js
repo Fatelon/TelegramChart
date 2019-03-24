@@ -285,6 +285,7 @@ class TC {
         this.bc.childNodes.forEach(l => {
             l.style.color = this.txCl;
             l.style.borderColor = this.vrLC;
+            if (!l.childNodes[0].checked) l.childNodes[0].style.backgroundColor = this.bkCl;
         });
 
         this.refreshView(true);

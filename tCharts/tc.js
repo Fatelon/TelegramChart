@@ -293,6 +293,13 @@ class TelegramChart {
         this.bc.childNodes.forEach(l => {
             l.style.color = this.textColor;
             l.style.borderColor = this.verticalLinesColor;
+            // l.firstChild.sty
+            // l.childNodes[0].style.color = '#FF5';
+            if (!l.childNodes[0].checked) {
+                l.childNodes[0].style.backgroundColor = this.backgroundColor;
+                console.log('l.childNodes[0]', l.childNodes[0]);
+            }
+
         });
 
         this.refreshView(true);
