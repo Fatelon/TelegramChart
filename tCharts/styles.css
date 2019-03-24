@@ -46,6 +46,7 @@ body {
 }
 
 #hb {
+    z-index: 100;
     position: fixed;
     width: 100%;
     text-align: end;
